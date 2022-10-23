@@ -4,7 +4,6 @@
 # @time: 2022/10/21 上午9:54
 
 import warnings
-
 warnings.filterwarnings("ignore")
 
 import os
@@ -30,7 +29,7 @@ from dataloader import load_data, split_dataset_pd, MyDataset
 
 # 数据不平衡，以Micro-F1为基准进行评判
 # 多分类问题中， micro-f1与accuracy存在恒等性
-def mytrain(config, model, train_dataset, dev_dataset, writer):
+def mytrain(config, model, train_dataset, dev_dataset, writer, train_metrics):
     # (precision, recall, macro_f1, _), micro_f1, dev_accuracy, dev_loss = myevaluate(config=config, model=model,
     #                                                                                 dev_dataset=dev_dataset)
     # return
@@ -73,7 +72,11 @@ def mytrain(config, model, train_dataset, dev_dataset, writer):
         writer.add_scalar(tag='performance/accuracy', scalar_value=dev_accuracy, global_step=epoch)
         writer.add_scalar(tag='performance/precision', scalar_value=precision, global_step=epoch)
         writer.add_scalar(tag='performance/recall', scalar_value=recall, global_step=epoch)
-        if pre_best_performance < macro_f1:
+        if train_metrics is 'macro':
+            my_metrics = macro_f1
+        else:
+            my_metrics = micro_f1
+        if pre_best_performance < my_metrics:
             pre_best_performance = macro_f1
             improved_epoch = epoch
             torch.save(model.state_dict(), config.save_model_path)
@@ -90,7 +93,7 @@ def mytrain(config, model, train_dataset, dev_dataset, writer):
     writer.close()
     print("~最佳模型结果~")
     print(f"epoch: {best_record['epoch']}")
-    print(f"micro_f1: {best_record['macro_f1']}\n")
+    print(f"macro_f1: {best_record['macro_f1']}\n")
     print(f"micro_f1: {best_record['micro_f1']}")
     print(f"accuracy: {best_record['accuracy']}\n")
     print(f"precision: {best_record['precision']}")
@@ -121,13 +124,14 @@ def myevaluate(config, model, dev_dataset):
     macro_scores = precision_recall_fscore_support(y_true=y_true, y_pred=y_pred, average='macro')
     micro_scores = precision_recall_fscore_support(y_true=y_true, y_pred=y_pred, average='micro')
     accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
+    print(f"Macro-F1: {macro_scores[2]}\n")
     print(f"Micro-F1: {micro_scores[2]}\n")
     print("Classification Report \n", classification_report(y_true=y_true, y_pred=y_pred, digits=4))
 
     return macro_scores, micro_scores[2], accuracy, evaluate_loss
 
 
-def main(data_flag):
+def main(data_flag, performance_metrics):
     time_start = time.time()
     cur_name = '10_21_data_event_' + data_flag
     config = Config(dataset='../data', name=cur_name)
@@ -180,7 +184,8 @@ def main(data_flag):
 
     # 加载模型
     model = ClassifierWithBert4Layer(config=config, flag=data_flag).to(config.device)
-    mytrain(config=config, model=model, train_dataset=train_dataloader, dev_dataset=dev_dataloader, writer=writer)
+    mytrain(config=config, model=model, train_dataset=train_dataloader, dev_dataset=dev_dataloader, writer=writer,
+            train_metrics=performance_metrics)
     # 记录训练总时长
     time_end = time.time()
     print(f"总计训练耗时：{time_end - time_start} s")
@@ -189,12 +194,20 @@ def main(data_flag):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Event clue model training.")
     parser.add_argument("--flag_id", default=0, type=int, help="Choose the data type for training(scope:[0,1,2,3,4]).")
+    parser.add_argument("--metrics", default='macro', type=str,
+                        help="Choose the metrics for model training.(scope:micro,macro)")
     args = parser.parse_args()
     if args.flag_id not in [0, 1, 2, 3, 4]:
         print("选择了错误的数据flag！")
     else:
         flags = ['score', 'scale', 'influence', 'strength', 'degree']
         cur_id = args.flag_id
-        main(data_flag=flags[cur_id])
+        cur_metrics = args.metrics
+        if cur_id not in [0, 1, 2, 3, 4]:
+            print("选择错误的训练数据集ID")
+        elif cur_metrics not in ['micro', 'macro']:
+            print("选择错误的训练衡量指标")
+        else:
+            main(data_flag=flags[cur_id], performance_metrics=cur_metrics)
 
     # python trainer.py --flag_id 2

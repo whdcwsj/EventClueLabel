@@ -9,6 +9,7 @@ warnings.filterwarnings("ignore")
 
 import os
 import sys
+
 # cur_dir = os.getcwd()
 sys.path.append("..")
 
@@ -19,7 +20,7 @@ from tqdm import tqdm
 from tensorboardX import SummaryWriter
 from torch.utils.data import DataLoader, WeightedRandomSampler
 import torch.nn.functional as F
-from sklearn.metrics import classification_report, precision_recall_fscore_support
+from sklearn.metrics import classification_report, precision_recall_fscore_support, accuracy_score
 import argparse
 
 from model.model import ClassifierWithBert4Layer
@@ -28,13 +29,23 @@ from dataloader import load_data, split_dataset_pd, MyDataset
 
 
 # 数据不平衡，以Micro-F1为基准进行评判
+# 多分类问题中， micro-f1与accuracy存在恒等性
 def mytrain(config, model, train_dataset, dev_dataset, writer):
-    # (precision, recall, micro_f1, _), macro_f1, dev_loss = myevaluate(config=config, model=model,
-    #                                                                   dev_dataset=dev_dataset)
+    # (precision, recall, macro_f1, _), micro_f1, dev_accuracy, dev_loss = myevaluate(config=config, model=model,
+    #                                                                                 dev_dataset=dev_dataset)
     # return
     optimizer = torch.optim.Adam(params=model.parameters(), lr=config.learning_rate)
     pre_best_performance = 0
     improved_epoch = 0
+    # 记录最佳模型的效果
+    best_record = {
+        'epoch': -1,
+        'macro_f1': -1,
+        'micro_f1': -1,
+        'accuracy': -1,
+        'precision': -1,
+        'recall': -1
+    }
     for epoch in range(config.num_epochs):
         total_loss = 0
         model.train()
@@ -53,23 +64,37 @@ def mytrain(config, model, train_dataset, dev_dataset, writer):
             data.set_description(f"Epoch {epoch}")
             data.set_postfix(loss=loss.item())
 
-        (precision, recall, micro_f1, _), macro_f1, dev_loss = myevaluate(config=config, model=model,
-                                                                          dev_dataset=dev_dataset)
+        (precision, recall, macro_f1, _), micro_f1, dev_accuracy, dev_loss = myevaluate(config=config, model=model,
+                                                                                        dev_dataset=dev_dataset)
         writer.add_scalar(tag='loss/train', scalar_value=total_loss / len(train_dataset), global_step=epoch)
         writer.add_scalar(tag='loss/dev', scalar_value=dev_loss / len(dev_dataset), global_step=epoch)
         writer.add_scalars(main_tag='performance/f1', tag_scalar_dict={'micro_f1': micro_f1, 'macro_f1': macro_f1},
                            global_step=epoch)
+        writer.add_scalar(tag='performance/accuracy', scalar_value=dev_accuracy, global_step=epoch)
         writer.add_scalar(tag='performance/precision', scalar_value=precision, global_step=epoch)
         writer.add_scalar(tag='performance/recall', scalar_value=recall, global_step=epoch)
-        if pre_best_performance < micro_f1:
-            pre_best_performance = micro_f1
+        if pre_best_performance < macro_f1:
+            pre_best_performance = macro_f1
             improved_epoch = epoch
             torch.save(model.state_dict(), config.save_model_path)
+            best_record['epoch'] = epoch
+            best_record['macro_f1'] = macro_f1
+            best_record['micro_f1'] = micro_f1
+            best_record['accuracy'] = dev_accuracy
+            best_record['precision'] = precision
+            best_record['recall'] = recall
             print("model saved!!!")
         elif epoch - improved_epoch >= config.require_improvement:
             print("model didn't improve for a long time!So break!!!")
             break
     writer.close()
+    print("~最佳模型结果~")
+    print(f"epoch: {best_record['epoch']}")
+    print(f"micro_f1: {best_record['macro_f1']}\n")
+    print(f"micro_f1: {best_record['micro_f1']}")
+    print(f"accuracy: {best_record['accuracy']}\n")
+    print(f"precision: {best_record['precision']}")
+    print(f"recall: {best_record['recall']}")
 
 
 def myevaluate(config, model, dev_dataset):
@@ -95,10 +120,11 @@ def myevaluate(config, model, dev_dataset):
 
     macro_scores = precision_recall_fscore_support(y_true=y_true, y_pred=y_pred, average='macro')
     micro_scores = precision_recall_fscore_support(y_true=y_true, y_pred=y_pred, average='micro')
+    accuracy = accuracy_score(y_true=y_true, y_pred=y_pred)
     print(f"Micro-F1: {micro_scores[2]}\n")
     print("Classification Report \n", classification_report(y_true=y_true, y_pred=y_pred, digits=4))
 
-    return micro_scores, macro_scores[2], evaluate_loss
+    return macro_scores, micro_scores[2], accuracy, evaluate_loss
 
 
 def main(data_flag):
@@ -162,7 +188,7 @@ def main(data_flag):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Event clue model training.")
-    parser.add_argument("--flag_id", default=1, type=int, help="Choose the data type for training(scope:[0,1,2,3,4]).")
+    parser.add_argument("--flag_id", default=0, type=int, help="Choose the data type for training(scope:[0,1,2,3,4]).")
     args = parser.parse_args()
     if args.flag_id not in [0, 1, 2, 3, 4]:
         print("选择了错误的数据flag！")

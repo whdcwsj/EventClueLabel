@@ -33,3 +33,6 @@ flags = ['score', 'scale', 'influence', 'strength', 'degree']
 res_id = event_clue_predict(text, flag_id)
 ```
 where ``text`` is ``输入的事件文本``，``flag_id`` is ``数据的类型``
+
+## notice: 
+In addition to the ``事件重要性打分``, the other four items need to prejudge the type of event.(Whether ``primaryClassification`` is 2)

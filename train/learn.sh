@@ -85,23 +85,5 @@
 
 
 
-
-python trainer.py --flag_id 0 &  python trainer.py --flag_id 1 & python trainer.py --flag_id 2
-
-
-
-
-
-
-#test_num=${RANDOM};
-#echo "Test start. Current process is: $$. Parent process is: ${PPID}. Test_num is: ${test_num}. ";
-## &
-#{
-#echo '-----------&------------';
-#echo "& test start. test_num is: ${test_num} ";
-#sleep 30
-#echo "& test. Now pid is:$$";
-#test_num=${RANDOM}
-#echo "& test_num is: ${test_num}. ";
-#}&
-#echo "& test end. Test_num is: ${test_num}. ";
+# 8、将输出和error全部重定向
+python trainer.py --flag_id 0 >> 1.txt 2>&1 & python trainer.py --flag_id 1 >> 2.txt 2>&1 & python trainer.py --flag_id 2 >> 3.txt 2>&1

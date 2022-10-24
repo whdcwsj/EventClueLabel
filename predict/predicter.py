@@ -49,7 +49,7 @@ def inference(model, token, mask, flag):
         cur_id = predict.item()
         predict_id = label_score_map[cur_id]
     else:
-        predict_id = predict.item()+1
+        predict_id = predict.item() + 1
 
     return predict_id
 

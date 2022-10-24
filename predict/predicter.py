@@ -49,7 +49,7 @@ def inference(model, token, mask, flag):
         cur_id = predict.item()
         predict_id = label_score_map[cur_id]
     else:
-        predict_id = predict.item()
+        predict_id = predict.item()+1
 
     return predict_id
 
@@ -87,15 +87,16 @@ def event_clue_predict(text, flag_id):
 
 
 if __name__ == '__main__':
-    # # 实际label为6
+    # 实际label为6
     input_text1 = '俄罗斯总统新闻秘书佩斯科夫表示，北约已经事实上卷入俄乌冲突，但俄罗斯将把对乌克兰的“特别军事行动”进行到底。'
     # 实际label为2
     input_text2 = '德国最大租车公司西克斯特（Sixt）计划在今后6年内采购10万辆中国厂商比亚迪生产的电动汽车。'
     # 实际label为1
     input_text3 = '我空军轰-6轰炸机、空警-2000预警机、运-8电子干扰机、图-154电子侦察机以及苏-35、歼-11战机护航编队等组成两个打击集群，分别从台湾的南方和北方两个不同的方向，同时并进完成绕岛巡航'
-    data_id = 0
+    data_id = 1
+    # flags = ['score', 'scale', 'influence', 'strength', 'degree']
     if data_id not in [0, 1, 2, 3, 4]:
         print("时间线索数据ID选择错误，请重新选择")
     else:
         res_id = event_clue_predict(text=input_text3, flag_id=data_id)
-        print(f"预测的类别ID为：{res_id}")
+        print(f"当前预测的event {flags[data_id]}，类别ID为：{res_id}")

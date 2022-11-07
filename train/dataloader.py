@@ -83,6 +83,6 @@ if __name__ == '__main__':
     dataset = MyDataset(config=config, dataset=train_dataset)
     # print(dataset.get_all_classes())
     # print(type(dataset.get_all_classes()))
-    # dataloader = DataLoader(dataset=dataset, batch_size=32, shuffle=True)
-    # for iter, data in enumerate(dataloader):
-    #     print(data)
+    dataloader = DataLoader(dataset=dataset, batch_size=32, shuffle=False)
+    for iter, data in enumerate(dataloader):
+        print(f"{iter}:{data}")

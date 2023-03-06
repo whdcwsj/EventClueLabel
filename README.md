@@ -34,5 +34,15 @@ res_id = event_clue_predict(text, flag_id)
 ```
 where ``text`` is ``输入的事件文本``，``flag_id`` is ``数据的类型``
 
+
+构建预测类: (predict/predicter_class.py)
+```
+flags = ['score', 'scale', 'influence', 'strength', 'degree']
+myclue = EventCluePredictor()
+res = myclue.predictor(text, flag_id)
+```
+
 ## notice: 
 In addition to the ``事件重要性打分``, the other four items need to prejudge the type of event.(Whether ``primaryClassification`` is 2)
+If ``primaryClassification`` is 2, ``scale`` 代表事件规模(3分类)， ``score`` 代表事件强度(3分类)
+If ``primaryClassification`` is not 2, ``scale`` 代表事件影响(2分类)， ``score`` 代表事件程度(4分类)

@@ -1,0 +1,90 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    /*background: #030d1f;*/
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    background-image: linear-gradient(135deg, #07299B 0%, #000F3E 100%);
+}
+#spider     /*爬虫*/
+{
+    height: 50px;
+    width: 125px;
+    background-color: #5cb85c;
+    color: black;
+    border: 2px solid #ffffff;
+    font-size: 25px;
+}
+/*框架头*/
+#aHeader
+{
+    background-color: black;
+    color: white;
+    font-family: 黑体;
+    font-weight: bold;
+    font-size: 28px;
+    height: 40px;
+    line-height: 40px;
+    padding-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    /*display: table-row;*/
+}
+/*框架主体*/
+#aMain1
+{
+    height: 100px;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #ccc;
+}
+#aMain2
+{
+    height: 100px;
+    padding-top: 5px;
+    padding-bottom: 10px;
+    /* border-bottom: 1px solid #0c2e46; */
+}
+.aTableTd1
+{
+    padding-left: 10px;
+    width: 250px;
+    color: white;
+    font-size: 30px;
+    text-align: center;
+}
+
+.aTableTd2
+{
+    padding-left: 20px;
+    width: 250px;
+    text-align: left;
+}
+
+.aTableTd3
+{
+    padding-left: 20px;
+    width: 400px;
+    text-align: left;
+    font-size: 15px;
+    color: #ecec4b;
+}
+
+input
+{
+    background-color:rgba(0,0,0,.15);
+    border: 1px solid rgba(209,211,217,0.50);
+    border-radius: 2px;
+    color: #EFF0F4;
+    height: 45px;
+    width: 500px;
+}
+#aMain table
+{
+    width: 800px;
+}
+#aMain tr
+{
+    height: 70px;
+}

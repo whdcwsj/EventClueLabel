@@ -122,3 +122,4 @@ weight_dict = {
 }
 
 print(type(weight_dict[0]))
+print(666)
